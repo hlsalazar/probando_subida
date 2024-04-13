@@ -1,113 +1,166 @@
-import Image from "next/image";
+import { useState, useEffect } from 'react';
+//import usuarios from "../usuarios.json";
+import { useRouter } from 'next/router'
 
-export default function Home() {
+const Login = () => {
+
+  var direccion_registro = "./Registro";
+
+  function IrRegistro(){
+    router.push(direccion_registro);
+  }
+
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+
+  //control para conseguir datos de login
+
+  const [usuarios, setUsuarios] = useState([]);
+  const [valorUsername, setValorUsername] = useState("");
+  const [valorPassword, setValorPassword] = useState("");
+  const [valorRol, setValorRol] = useState("");
+  const [ingresaAdmin, setIngresaAdmin] = useState(false);
+  const [ingresaUsuario, setIngresaUsuario] = useState(false);
+
+  //variables para indicar al usuario si los valores insertados estan correctos
+  const [estiloUsername, setEstiloUsername] = useState({});
+
+  //control de mensaje de error
+  const [MostrarError, setMostrarError] = useState(false);
+
+
+  async function getUsuarios() {
+
+    const queryParams = new URLSearchParams({
+      username: valorUsername,
+      password: valorPassword,
+      rol: valorRol
+    });
+
+    const postData = {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+    };
+    const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/login?${queryParams.toString()}`,
+      postData);
+    const response = await res.json();
+    setUsuarios(response.usuarios);
+  }
+
+  useEffect(() => {
+    getUsuarios();
+  }, []);
+
+
+  const asignarValorUsername = event => {
+    setValorUsername(event.target.value);
+  }
+
+  const asignarValorPassword = event => {
+    setValorPassword(event.target.value);
+  }
+
+
+  ///////////////////////
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    console.log(`Submitting ${username} with ${password}`);
+  };
+  //importante: la declaracion de router tiene que ir fuera de
+  //la funcion , solamente en la funcion principal
+  const router = useRouter()
+
+  function VerificarLogin() {
+
+    var direccion_admin = "./indexAdmin";
+    var direccion_usuario = "./indexUser";
+
+    setIngresaAdmin(false);
+    setIngresaAdmin(false);
+
+
+
+    //busqueda y compara si el valor en input esta en el objeto consultado
+    for (let i = 0; i < usuarios.length; i++) {
+      const usuario = usuarios[i];
+      var envioRol = usuario.rol;
+      var envioUser = usuario.username;
+
+      if ((usuario.username === valorUsername) && (usuario.password === valorPassword) && (usuario.rol === 'Administrador')) {
+        setIngresaAdmin(true);
+        router.push(
+          {
+            pathname: direccion_admin,
+            query: {valorUsername, envioRol}
+          }
+        );
+        localStorage.setItem("valorGlobalUsuario", envioUser);
+        localStorage.setItem("valorGlobal", envioRol); 
+        break;
+      } else if ((usuario.username === valorUsername) && (usuario.password === valorPassword) && (usuario.rol === 'Usuario')) {
+        setIngresaUsuario(true);
+        router.push(
+          {
+            pathname: direccion_admin,
+            query: {valorUsername, envioRol}
+          }
+        );
+        localStorage.setItem("valorGlobalUsuario", envioUser);
+        localStorage.setItem("valorGlobal", envioRol); 
+        break;
+      } else if ((usuario.username !== valorUsername) && (usuario.password !== valorPassword)) {
+        //alert("datos incorrectos");
+        setEstiloUsername({ border: '2px solid red' });
+        setMostrarError(true);
+        continue;
+      }
+    };
+  }
+
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <div className='flex justify-center h-screen items-center bg-gradient-to-r from-cyan-500	 to-lime-400 p-5'>
+      <div className="flex p-5 items-center bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700">
+        <div className='flex lg:block hidden  ml-2 mr-3'>
+          <img src={'../assets/images/logo.png'} alt="" />
+        </div>   
+        {/*Div de login */}
+        <div className="flex flex-col p-4 leading-normal">
+        <div className='flex lg:hidden ml-2 mr-3 pb-5'>
+          <img src={'../assets/images/logo.png'} alt="" />
+        </div>   
+            <div className=" md:p-8 bg-white border border-gray-200 rounded-lg shadow  dark:bg-gray-800 dark:border-gray-700">
+              <form onSubmit={handleSubmit} className="space-y-3 " action="#">
+                <div className=''>
+                  <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Usuario</label>
+                  <input style={estiloUsername} value={valorUsername} onChange={asignarValorUsername} type="text" name="email" id="email" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="usuario123" required />
+                </div>
+                <div>
+                  <label htmlFor="password" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Contraseña</label>
+                  <input style={estiloUsername} value={valorPassword} onChange={asignarValorPassword} type="password" name="password" id="password" placeholder="••••••••" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" required />
+                </div>
+                {MostrarError && <p className="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400">Datos Incorrectos, intente de nuevo</p>}
+                <div className="flex items-start">
+                  <div className="flex items-start">
+                    <div className="flex items-center h-5">
+                    </div>
+                  </div>
+                </div>
+                <button onClick={VerificarLogin} type="submit" className="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Iniciar Sesión</button>
+                <button onClick={IrRegistro} className="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Registrarse</button>
+              </form>
+            </div>
         </div>
       </div>
 
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
 
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+    </div>
   );
-}
+};
+
+export default Login;
+
