@@ -1,6 +1,4 @@
-import { useState, useEffect } from 'react';
 //import usuarios from "../usuarios.json";
-import { useRouter } from 'next/router'
 
 const Login = () => {
 
